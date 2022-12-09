@@ -1,8 +1,15 @@
-import sys
-import os.path
+from App import App
+import time
 
-TWSimport = os.path.join(sys.path[0], 'C:\\TWS API\\source\\pythonclient')
-print(TWSimport)
-sys.path.insert(1, TWSimport)
+def main():
+    # Connect to localhost, note 7497 is for paper trading, 7496 is for live trading
+    app = App("127.0.0.1", 7496, 0)
 
-import ibapi
+    requested_time = app.server_clock()
+    print('Current time from server is: {}'.format(requested_time))
+
+    time.sleep(2)
+    app.disconnect()
+
+if __name__ == '__main__':
+    main()

@@ -2,53 +2,36 @@ import sys
 import os.path
 
 TWSimport = os.path.join(sys.path[0], 'C:\\TWS API\\source\\pythonclient')
-print(TWSimport)
+# print(TWSimport)
 sys.path.insert(1, TWSimport)
 
-from ibapi.client import EClient
-from ibapi.wrapper import EWrapper
-from ibapi.utils import iswrapper
+from ibapi.client import *
 
-from datetime import datetime
-from threading import Thread
-import time
-
-
-class Client(EWrapper, EClient):
+class Client(EClient):
     ''' Serves as the client and the wrapper '''
 
-    def __init__(self, addr, port, client_id):
-        EClient. __init__(self, self)
+    def __init__(self, wrapper):
+        EClient. __init__(self, wrapper)
 
-        # Connect to TWS
-        self.connect(addr, port, client_id)
+    def server_clock(self):
+        print('Retreiving unix time from server')
 
-        # Launch the client thread
-        thread = Thread(target=self.run)
-        thread.start()
+        # Create a queue to store the time
+        time_storage = self.wrapper.init_time()   
 
-    @iswrapper
-    def currentTime(self, cur_time):
-        t = datetime.fromtimestamp(cur_time)
-        print('Current time: {}'.format(t))
+        self.reqCurrentTime()
 
-    @iswrapper
-    def error(self, req_id, code, msg):
-        print('Error {}: {}'.format(code, msg))
+        # Max wait time if there is no connection
+        max_wait_time = 10
 
-def main():
+        try:
+            requested_time = time_storage.get(timeout = max_wait_time)
+        except queue.Empty():
+            print('The queue was empty or the max time was reached')
+            requested_time = None
 
-    # Create the client and connect to TWS
-    client = Client('127.0.0.1', 7497, 0)
+        while self.wrapper.is_error():
+            print('Error:')
+            print(self.get_error(timeout=5))
 
-    # Request the current time
-    client.reqCurrentTime()
-
-    # Sleep while the request is processed
-    time.sleep(0.5)
-
-    # Disconnect from TWS
-    client.disconnect()
-
-if __name__ == '__main__':
-    main()
+        return requested_time
