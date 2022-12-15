@@ -8,7 +8,6 @@ sys.path.insert(1, TWSimport)
 from ibapi.wrapper import *
 
 import queue
-import datetime
 import time
 import math
 
@@ -16,6 +15,10 @@ import math
 # This will override the defaulr api methods to produce cleaner and more readable information
 
 class Wrapper(EWrapper):
+
+    # ---------------------------
+    # Error Handling
+    # ---------------------------
     # This class will also overwrite the api's default error handling
     def init_error(self):
         error_queue = queue.Queue()
@@ -35,21 +38,42 @@ class Wrapper(EWrapper):
                 return None
         return None
 
-    def error(self, id, errorCode, errorStr, advancedOrderRejectJson):
+    def error(self, id, error_code, error_str, advancedOrderRejectJson):
         # Override the native method
         # Skip over error codes 2104, 2106, and 2158. These are just messages saying connection 
         # has been established, but add noise to the terminal       
-        if errorCode not in [2104, 2106, 2158]:
-            errormessage = 'IB error: %s , ID: %d returned with code %d' % (errorStr, id, errorCode)
+        if error_code not in [2104, 2106, 2158]:
+            errormessage = 'IB error: %s , ID: %d returned with code %d' % (error_str, id, error_code)
             self.my_errors_queue.put(errormessage)
 
-    # Time handling methods
-    def init_time(self):
-        time_queue = queue.Queue()
-        self.my_time_queue = time_queue
-        return time_queue
+    # Queue for handling data returned to the wrapper
+    def init_queue(self):
+        wrapper_queue = queue.Queue()
+        self.my_wrapper_queue = wrapper_queue
+        return wrapper_queue
+
 
     def currentTime(self, server_time):
         ## Overriden method
-        self.my_time_queue.put(server_time)
+        self.my_wrapper_queue.put(server_time)
+
+    def symbolSamples(self, req_id, descs):
+        # Print the number of symbols in the returned results
+        for desc in descs:
+            if (desc.contract.symbol != ''):
+                print('Symbol: {}'.format(desc.contract.symbol))
+
+    def contract_data(self):
+        contract_queue = queue.Queue()
+        self.my_contract_queue = contract_queue
+        return contract_queue
+
+    def contractDetails(self, req_id, details):
+        print('Long name: {}'.format(details.longName))
+        print('Category: {}'.format(details.category))
+        print('Subcategory: {}'.format(details.subcategory))
+        print('Contract ID: {}\n'.format(details.contract.conId))
+        self.my_wrapper_queue.put(details)
+        
+
 
