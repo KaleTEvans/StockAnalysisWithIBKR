@@ -57,23 +57,29 @@ class Wrapper(EWrapper):
         ## Overriden method
         self.my_wrapper_queue.put(server_time)
 
+    def accountSummary(self, reqId, account, tag, value, currency):
+        self.my_wrapper_queue.put({
+            "reqId": reqId,
+            "account": account,
+            "tag": tag,
+            "value": value,
+            "currency": currency
+        })
+
     def symbolSamples(self, req_id, descs):
         # Print the number of symbols in the returned results
         for desc in descs:
             if (desc.contract.symbol != ''):
                 print('Symbol: {}'.format(desc.contract.symbol))
 
-    def contract_data(self):
-        contract_queue = queue.Queue()
-        self.my_contract_queue = contract_queue
-        return contract_queue
-
     def contractDetails(self, req_id, details):
-        print('Long name: {}'.format(details.longName))
-        print('Category: {}'.format(details.category))
-        print('Subcategory: {}'.format(details.subcategory))
-        print('Contract ID: {}\n'.format(details.contract.conId))
+        print('Retrieving contract id for {}'.format(details.longName))
         self.my_wrapper_queue.put(details)
+
+    def historicalData(self, reqId, bar):
+        # Add items to the queue
+        self.my_wrapper_queue.put(bar)
+        
         
 
 
