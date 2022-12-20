@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "{workspaceFolder}/StockAnalysis",
+        "C:/TWS API/source/pythonclient",
+        "C:/TWS API/source/pythonclient/ibapi"
+    ]
+}

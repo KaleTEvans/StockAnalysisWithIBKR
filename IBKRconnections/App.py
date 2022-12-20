@@ -1,5 +1,5 @@
-from Client import Client
-from Wrapper import Wrapper
+from IBKRconnections.Client import Client
+from IBKRconnections.Wrapper import Wrapper
 
 from threading import Thread
 

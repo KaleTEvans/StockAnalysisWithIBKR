@@ -21,8 +21,24 @@ def main():
     print('ID: {}'.format(res.contract.conId))
 
     historical_data = app.historical_data(res.contract, '3 M', '1 day', 'TRADES')
+    bar_fields = {
+        "Date": [],
+        "Open": [],
+        "Close": [],
+        "High": [],
+        "Low": [],
+        "Volume": []
+    }
     for bar in historical_data:
-        print(bar.open)
+        bar_fields["Date"].append(bar.date)
+        bar_fields["Open"].append(bar.open)
+        bar_fields["Close"].append(bar.close)
+        bar_fields["High"].append(bar.high)
+        bar_fields["Low"].append(bar.low)
+        bar_fields["Volume"].append(bar.volume)
+
+    historical_data_df = pd.DataFrame(bar_fields)
+    print(historical_data_df)
 
     time.sleep(2)
     app.disconnect()
