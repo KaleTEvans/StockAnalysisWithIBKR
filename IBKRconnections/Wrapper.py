@@ -75,6 +75,7 @@ class Wrapper(EWrapper):
     def contractDetails(self, req_id, details):
         print('Retrieving contract id for {}'.format(details.longName))
         self.my_wrapper_queue.put(details)
+        self.contractDetailsEnd(req_id)
 
     def historicalData(self, reqId, bar):
         # Add items to the queue

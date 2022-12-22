@@ -11,15 +11,20 @@ def main():
     requested_time = app.server_clock()
     print('Current time from server is: {}'.format(requested_time))
 
+    # acct_info = app.account_info()
+    # print(acct_info)
+
     contract_fields = {
-        "symbol": "AAPL",
+        "symbol": "META",
         "secType": "STK",
         "exchange": "SMART",
+        "primaryExchange": "NASDAQ",
         "currency": "USD"
     }
     res = app.get_stock_contract(contract_fields)
+    print(res.contract)
     print('ID: {}'.format(res.contract.conId))
-
+    time.sleep(1)
     historical_data = app.historical_data(res.contract, '3 M', '1 day', 'TRADES')
     bar_fields = {
         "Date": [],

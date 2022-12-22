@@ -14,32 +14,28 @@ class Client(EClient):
 
     def __init__(self, wrapper):
         EClient. __init__(self, wrapper)
-        
-    def queue_handler(self, req_queue, max_wait_time = 5):
-        try:
-            requested_data = req_queue.get(timeout = max_wait_time)
-        except queue.Empty():
-            print('The queue was empty or the max time was reached')
-            requested_data = None
-
-        while self.wrapper.is_error():
-            print('Error:')
-            print(self.get_error(timeout=5))
-
-        return requested_data
 
     # ---------------------------
     # Time Handling Methods
     # ---------------------------
     # Use this at the beginning of each program to ensure server connection has been established
     def server_clock(self):
-        print('Retreiving unix time from server')
+        # print('Retreiving unix time from server')
         # Create a queue to store the time
         time_storage = self.wrapper.init_queue()   
         # Request the data
         self.reqCurrentTime()
         # Retrieve data from queue
-        requested_time = self.queue_handler(time_storage)
+        try:
+            requested_time = time_storage.get(timeout = 1)
+        except queue.Empty:
+            print('CURRENT TIME: The queue was empty or the max time was reached')
+            requested_time = None
+
+        while self.wrapper.is_error():
+            print('Error:')
+            print(self.get_error(timeout=5))
+
         # Remove empty queue
         del time_storage
         return datetime.datetime.utcfromtimestamp(requested_time).strftime('%Y-%m-%d %H:%M:%S')
@@ -56,11 +52,13 @@ class Client(EClient):
         requested_acct_info = []
 
         try:
+            requested_acct_info.append(account_info_storage.get(timeout = 1))
+        except queue.Empty:
+            print('ACCOUNT INFO: The queue was empty or the max time was reached')
+            requested_acct_info = None
+        else:
             while not account_info_storage.empty():
                 requested_acct_info.append(account_info_storage.get(timeout = 1))
-        except queue.Empty():
-            print('The queue was empty or the max time was reached')
-            requested_acct_info = None
 
         while self.wrapper.is_error():
             print('Error:')
@@ -116,10 +114,18 @@ class Client(EClient):
             contract.secId = fields["secId"]
 
         contract_storage = self.wrapper.init_queue()
+        
+        self.reqContractDetails(1001, contract)
 
-        self.reqContractDetails(1, contract)
+        try:
+            requested_contract = contract_storage.get(timeout = 1)
+        except queue.Empty:
+            print('CONTRACT DETAILS: The queue was empty or the max time was reached')
+            requested_contract = None
 
-        requested_contract = self.queue_handler(contract_storage)
+        while self.wrapper.is_error():
+            print('Error:')
+            print(self.get_error(timeout=5))
 
         del contract_storage
         
@@ -135,6 +141,7 @@ class Client(EClient):
         print('Retrieving historical data for {}'.format(contract.symbol))
         # Get current date and time
         queryTime = (datetime.datetime.now()).strftime("%Y%m%d-%H:%M:%S")
+        print(queryTime)
 
         historical_data_storage = self.wrapper.init_queue()
         self.reqHistoricalData(4001, contract, queryTime, duration, bar_size, include, trading_hours, format_date, refresh, [])
@@ -143,12 +150,15 @@ class Client(EClient):
         requested_bar_info = []
 
         try:
+            bar_data = historical_data_storage.get(timeout = 5)
+            requested_bar_info.append(bar_data)
+        except queue.Empty:
+            print('HISTORICAL DATA: The queue was empty or the max time was reached')
+            requested_bar_info = None
+        else:
             while not historical_data_storage.empty():
                 bar_data = historical_data_storage.get(timeout = 1)
                 requested_bar_info.append(bar_data)
-        except queue.Empty():
-            print('The queue was empty or the max time was reached')
-            requested_bar_info = None
 
         while self.wrapper.is_error():
             print('Error:')
