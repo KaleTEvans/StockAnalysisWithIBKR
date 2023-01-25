@@ -1,9 +1,11 @@
 from IBKRconnections.App import App
 import time
+import datetime
+import statistics
 
 from ibapi.client import *
 import pandas as pd
-
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
 class HistoricalData(App):
@@ -26,6 +28,8 @@ class HistoricalData(App):
         }
         self.contract_res = self.app.get_stock_contract(self.contract_fields)
         self.contract = self.contract_res.contract
+        # Get current time 
+        self.queryTime = (datetime.datetime.utcnow()).strftime("%Y%m%d-%H:%M:%S")
 
     def __del__(self):
         self.app.disconnect()
@@ -36,7 +40,7 @@ class HistoricalData(App):
 
     def get_data(self):
         # Retrieve Historical Data
-        self.historic_data = self.app.historical_data(self.contract, self.time_frame, self.bar_size, self.include_data)
+        self.historic_data = self.app.historical_data(self.contract, self.queryTime, self.time_frame, self.bar_size, self.include_data)
 
         self.bar_fields = {
             "Date": [],
@@ -47,6 +51,7 @@ class HistoricalData(App):
             "Volume": []
         }
 
+        # Adding to a map to transfer into a dataframe
         for bar in self.historic_data:
             self.bar_fields["Date"].append(bar.date)
             self.bar_fields["Open"].append(bar.open)
@@ -54,28 +59,40 @@ class HistoricalData(App):
             self.bar_fields["High"].append(bar.high)
             self.bar_fields["Low"].append(bar.low)
             self.bar_fields["Volume"].append(bar.volume)
+
+        self.historical_data_df = pd.DataFrame(self.bar_fields)
+        return self.historical_data_df
+
+    def candle_volatility(self):
+        self.historical_data_df['MaxRange'] = self.historical_data_df['High'] - self.historical_data_df['Low']
+
+        return self.historical_data_df
     
 
-def main():
-    hd = HistoricalData("SPY", "1 M", "5 mins", "TRADES")
-    hd.show_time()
-    time.sleep(1)
-    hd.get_data()
+# def main():
+#     hd = HistoricalData("SPY", "1 M", "5 mins", "TRADES")
+#     hd.show_time()
+#     time.sleep(1)
 
-    historical_data_df = pd.DataFrame(hd.bar_fields)
-    print(historical_data_df)
+#     historical_data_df = hd.get_data()
+#     print(historical_data_df)
 
-    fig = go.Figure(data=[go.Candlestick(x=historical_data_df['Date'],
-                    open=historical_data_df['Open'],
-                    close=historical_data_df['Close'],
-                    high=historical_data_df['High'],
-                    low=historical_data_df['Low'])])
+#     candle_data = hd.candle_volatility()
+#     hg = candle_data['MaxRange'].hist(figsize=(10,10))
+#     print(hd.historical_data_df)
+#     plt.show()
 
-    fig.show()
+#     fig = go.Figure(data=[go.Candlestick(x=historical_data_df['Date'],
+#                     open=historical_data_df['Open'],
+#                     close=historical_data_df['Close'],
+#                     high=historical_data_df['High'],
+#                     low=historical_data_df['Low'])])
 
-    time.sleep(1)
-    del hd
-    # app.disconnect()
+#     fig.show()
 
-if __name__ == '__main__':
-    main()
+#     time.sleep(1)
+#     del hd
+#     # app.disconnect()
+
+# if __name__ == '__main__':
+#     main()

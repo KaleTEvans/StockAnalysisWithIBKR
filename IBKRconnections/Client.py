@@ -134,14 +134,11 @@ class Client(EClient):
     # ------------------------
     # Retrieve Historical Data
     # ------------------------
-    def historical_data(self, contract, duration, bar_size, include, trading_hours = 0, format_date = 1, refresh = False):
+    def historical_data(self, contract, queryTime, duration, bar_size, include, trading_hours = 1, format_date = 1, refresh = False):
         # include: see api docs for available data
         # trading_hours: 0 for extended trading hours, 1 for regular
         # refresh: set to true if you would like data to be updated real time
         print('Retrieving historical data for {}'.format(contract.symbol))
-        # Get current date and time
-        queryTime = (datetime.datetime.now()).strftime("%Y%m%d-%H:%M:%S")
-        print(queryTime)
 
         historical_data_storage = self.wrapper.init_queue()
         self.reqHistoricalData(4001, contract, queryTime, duration, bar_size, include, trading_hours, format_date, refresh, [])

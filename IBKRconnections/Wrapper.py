@@ -12,7 +12,7 @@ import time
 import math
 
 # The wrapper handles incoming messages from the server
-# This will override the defaulr api methods to produce cleaner and more readable information
+# This will override the default api methods to produce cleaner and more readable information
 
 class Wrapper(EWrapper):
 
