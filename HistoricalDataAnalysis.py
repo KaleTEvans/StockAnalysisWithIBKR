@@ -69,30 +69,30 @@ class HistoricalData(App):
         return self.historical_data_df
     
 
-# def main():
-#     hd = HistoricalData("SPY", "1 M", "5 mins", "TRADES")
-#     hd.show_time()
-#     time.sleep(1)
+def main():
+    hd = HistoricalData("SPY", "1 M", "5 mins", "TRADES")
+    hd.show_time()
+    time.sleep(1)
 
-#     historical_data_df = hd.get_data()
-#     print(historical_data_df)
+    historical_data_df = hd.get_data()
+    print(historical_data_df)
 
-#     candle_data = hd.candle_volatility()
-#     hg = candle_data['MaxRange'].hist(figsize=(10,10))
-#     print(hd.historical_data_df)
-#     plt.show()
+    candle_data = hd.candle_volatility()
+    hg = candle_data['MaxRange'].hist(figsize=(10,10))
+    print(hd.historical_data_df)
+    plt.show()
 
-#     fig = go.Figure(data=[go.Candlestick(x=historical_data_df['Date'],
-#                     open=historical_data_df['Open'],
-#                     close=historical_data_df['Close'],
-#                     high=historical_data_df['High'],
-#                     low=historical_data_df['Low'])])
+    fig = go.Figure(data=[go.Candlestick(x=historical_data_df['Date'],
+                    open=historical_data_df['Open'],
+                    close=historical_data_df['Close'],
+                    high=historical_data_df['High'],
+                    low=historical_data_df['Low'])])
 
-#     fig.show()
+    fig.show()
 
-#     time.sleep(1)
-#     del hd
-#     # app.disconnect()
+    time.sleep(1)
+    del hd
+    # app.disconnect()
 
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()

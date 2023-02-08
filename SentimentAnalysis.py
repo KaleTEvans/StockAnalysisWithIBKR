@@ -1,7 +1,9 @@
 from IBKRconnections.App import App
 from ibapi.client import *
-import time
+from datetime import datetime
+from dateutil.tz import tzutc, tzlocal
 import pyodbc
+import pytz
 
 import pandas as pd
 import plotly.express as px
@@ -18,6 +20,12 @@ import tensorflow as tf
 
 from HistoricalDataAnalysis import HistoricalData
 
+# Function to convert from UTC to CST
+def convertTime(date):
+    dt_utc = date.replace(tzinfo=pytz.UTC)
+
+    return dt_utc.astimezone(tzlocal())
+
 # Connect to db
 conn = pyodbc.connect("Driver={SQL Server};"
                         "Server=DESKTOP-FRBUP45\SQLEXPRESS;"
@@ -30,12 +38,26 @@ cursor = conn.cursor()
 query = 'SELECT date, source, mention FROM finnhub ORDER BY date ASC'
 sentiment_df = pd.read_sql(query, conn)
 
-# Now plot
-fig, ax = plt.subplots()
-for label, grp in sentiment_df.groupby('source'):
-    grp.plot(x = 'date', y = 'mention', ax=ax, label=label)
+# Extract desired date range
+start_date = '2022-12-01'
+end_date = '2022-12-31'
 
-plt.show()
+mask = (sentiment_df['date'] >= start_date) & (sentiment_df['date'] <= end_date)
+sentiment_df = sentiment_df.loc[mask]
+
+sentiment_df['date'] = sentiment_df['date'].apply(convertTime)
+
+reddit_df = sentiment_df[sentiment_df['source'] == 'reddit']
+twitter_df = sentiment_df[sentiment_df['source'] == 'twitter']
+
+fig = go.Figure(data=[
+    go.Bar(x=reddit_df['date'], name='reddit', y=reddit_df['mention']),
+    go.Bar(x=twitter_df['date'], name='twitter', y=twitter_df['mention'])
+])
+
+fig.update_layout(barmode='stack')
+fig.show()
+
 
 print(sentiment_df)
 print(sentiment_df.dtypes)
