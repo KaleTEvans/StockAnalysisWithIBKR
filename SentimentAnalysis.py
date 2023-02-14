@@ -35,14 +35,34 @@ class SocialSentimentData():
         self.cursor.close()
         self.conn.close()
 
-    # Will use inputs as an array of columns user wishes to select
-    def query_data(self, ticker, inputs, db):
-
+    # Create a string from an array of inputs for different queries
+    def input_string(self, inputs):
         input_str = inputs[0]
         for i in inputs[1:]:
             input_str += f',{i}'
 
+        return input_str
+
+    # Will use inputs as an array of columns user wishes to select
+    def query_data(self, ticker, inputs, db):
+
+        input_str = self.input_string(inputs)
+
         query = f"SELECT {input_str} FROM {db} WHERE symbol = '{ticker}' ORDER BY date asc"
+        print(query)
+        sentiment_df = pd.read_sql(query, self.conn)
+
+        # Update date to local time
+        sentiment_df['date'] = sentiment_df['date'].apply(convertTime)
+        sentiment_df = sentiment_df.set_index('date')
+
+        return sentiment_df
+    
+    def query_by_date(self, ticker, inputs, db, start_date, end_date):
+        
+        input_str = self.input_string(inputs)
+
+        query = f"SELECT {input_str} FROM {db} WHERE symbol = '{ticker}' AND date BETWEEN '{start_date}' AND '{end_date}' ORDER BY date asc"
         sentiment_df = pd.read_sql(query, self.conn)
 
         # Update date to local time
@@ -52,8 +72,14 @@ class SocialSentimentData():
         return sentiment_df
 
 ss = SocialSentimentData()
-sentiment_df_AAPL = ss.query_data('AAPL', ['date', 'source', 'mention', 'score'], 'finnhub')
-sentiment_df_AMD = ss.query_data('AMD', ['date', 'source', 'mention', 'score'], 'finnhub')
+
+inputs = ['date', 'source', 'mention', 'positive_mention', 'negative_mention', 'score']
+
+sentiment_df_AAPL = ss.query_by_date('AAPL', inputs, 'finnhub', '2023-01-30', '2023-01-31 23:00:00')
+sentiment_df_AMD = ss.query_by_date('AMD', inputs, 'finnhub', '2023-01-01', '2023-01-31 23:00:00')
+
+sentiment_df_AAPL['negative_mention'] *= -1
+
 
 # Extract desired date range
 # start_date = '2022-01-01'
